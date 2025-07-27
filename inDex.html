@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Matematika Anak SD</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tone.js CDN for sound generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem; /* Increased padding */
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Spacing between elements */
+        }
+        input[type="number"], select {
+            border: 2px solid #cbd5e0; /* Light gray border */
+            border-radius: 0.75rem; /* Rounded input */
+            padding: 0.75rem 1rem;
+            font-size: 1.25rem;
+            text-align: center;
+            width: 100%;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #6366f1; /* Indigo on focus */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Light indigo shadow */
+        }
+        button {
+            background-color: #6366f1; /* Indigo */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: none;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        }
+        button:hover {
+            background-color: #4f46e5; /* Darker indigo on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(99, 102, 241, 0.2);
+        }
+        .feedback {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+        .correct {
+            color: #10b981; /* Green */
+        }
+        .incorrect {
+            color: #ef4444; /* Red */
+        }
+        .timer {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6; /* Blue */
+            margin-bottom: 1rem;
+        }
+        .welcome-screen, .result-screen, .countdown-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .music-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .music-controls button {
+            background-color: #14b8a6; /* Teal */
+            box-shadow: 0 4px 10px rgba(20, 184, 166, 0.3);
+        }
+        .music-controls button:hover {
+            background-color: #0d9488; /* Darker teal */
+            box-shadow: 0 6px 15px rgba(20, 184, 166, 0.4);
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .option-button {
+            background-color: #e0e7ff; /* Light indigo */
+            color: #4338ca; /* Darker indigo text */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 2px solid #c7d2fe; /* Indigo light border */
+        }
+        .option-button:hover {
+            background-color: #c7d2fe; /* Lighter indigo on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(199, 210, 254, 0.5);
+        }
+        .option-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(199, 210, 254, 0.3);
+        }
+        .option-button.selected {
+            border-color: #6366f1;
+            background-color: #a5b4fc;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4);
+        }
+        /* New styles for correct/incorrect answer buttons */
+        .option-button.correct-answer {
+            background-color: #d1fae5; /* Light green */
+            border-color: #10b981; /* Green border */
+            color: #065f46; /* Darker green text */
+        }
+        .option-button.incorrect-answer {
+            background-color: #fee2e2; /* Light red */
+            border-color: #ef4444; /* Red border */
+            color: #991b1b; /* Darker red text */
+        }
+
+        .countdown-text {
+            font-size: 6rem; /* Large font for countdown */
+            font-weight: 900;
+            color: #3b82f6; /* Blue */
+            animation: pulse 1s infinite alternate; /* Simple pulse animation */
+        }
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 1.75rem;
+            }
+            .question-text {
+                font-size: 2rem;
+            }
+            input[type="number"], select {
+                font-size: 1.125rem;
+            }
+            button {
+                font-size: 1rem;
+                padding: 0.6rem 1.2rem;
+            }
+            .timer, .score-text {
+                font-size: 1.25rem;
+            }
+            .options-grid {
+                grid-template-columns: 1fr; /* Stack options on small screens */
+            }
+            .option-button {
+                font-size: 1.25rem;
+                padding: 0.8rem;
+            }
+            .countdown-text {
+                font-size: 4rem; /* Smaller font for countdown on mobile */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="welcome-screen">
+            <h1 class="text-3xl font-bold text-gray-800">Selamat Datang di Kuis Matematika!</h1>
+            <p class="text-gray-600 text-lg">Asah kemampuan berhitungmu dengan soal-soal seru.</p>
+
+            <div class="flex flex-col items-center gap-2">
+                <label for="difficulty-select" class="text-gray-700 font-semibold">Pilih Tingkat Kesulitan:</label>
+                <select id="difficulty-select" class="w-full max-w-xs">
+                    <option value="easy">Mudah</option>
+                    <option value="medium">Sedang</option>
+                    <option value="hard">Sulit</option>
+                </select>
+            </div>
+
+            <button id="start-quiz-button">Mulai Kuis</button>
+
+            <div class="music-controls">
+                <button id="toggle-music-button">Putar Musik</button>
+            </div>
+        </div>
+
+        <!-- Countdown Screen -->
+        <div id="countdown-screen" class="hidden flex-col items-center justify-center h-full">
+            <p id="countdown-text" class="countdown-text"></p>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <p class="text-lg font-semibold text-gray-700">Skor: <span id="score">0</span></p>
+                <p class="timer">Waktu: <span id="time-left">10</span>s</p>
+            </div>
+            <p id="question-text" class="text-5xl font-extrabold text-gray-900 mb-6"></p>
+            
+            <div id="options-container" class="options-grid">
+                <!-- Options will be dynamically inserted here -->
+                <button class="option-button" data-value="0"></button>
+                <button class="option-button" data-value="0"></button>
+                <button class="option-button" data-value="0"></button>
+                <button class="option-button" data-value="0"></button>
+            </div>
+
+            <p id="feedback-text" class="feedback"></p>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden result-screen">
+            <h2 class="text-3xl font-bold text-gray-800">Kuis Selesai!</h2>
+            <p class="text-xl text-gray-700">Skor Akhirmu: <span id="final-score" class="font-extrabold text-indigo-600"></span></p>
+            <button id="restart-quiz-button">Main Lagi</button>
+        </div>
+    </div>
+
+    <!-- Audio Element for Background Music -->
+    <audio id="background-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        Browser Anda tidak mendukung elemen audio.
+    </audio>
+
+    <script>
+        // Get DOM elements
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const countdownScreen = document.getElementById('countdown-screen');
+        const countdownText = document.getElementById('countdown-text');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const startQuizButton = document.getElementById('start-quiz-button');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackText = document.getElementById('feedback-text');
+        const scoreDisplay = document.getElementById('score');
+        const timeLeftDisplay = document.getElementById('time-left');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const restartQuizButton = document.getElementById('restart-quiz-button');
+        const difficultySelect = document.getElementById('difficulty-select');
+        const backgroundMusic = document.getElementById('background-music');
+        const toggleMusicButton = document.getElementById('toggle-music-button');
+
+        // Quiz state variables
+        let score = 0;
+        let currentQuestion = {};
+        let questionCount = 0;
+        const totalQuestions = 10;
+        let timer;
+        let timeLeft = 10; // Default time
+        let currentDifficulty = 'easy';
+        let selectedOptionButton = null;
+
+        // Tone.js setup for sound effects
+        const correctSynth = new Tone.Synth().toDestination();
+        const incorrectNoise = new Tone.NoiseSynth({
+            noise: {
+                type: "pink"
+            },
+            envelope: {
+                attack: 0.005,
+                decay: 0.2,
+                sustain: 0.1,
+                release: 0.3
+            }
+        }).toDestination();
+        const countdownBeep = new Tone.Synth().toDestination();
+
+        // Function to generate a random integer between min and max (inclusive)
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Function to shuffle an array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Function to generate a new math question based on difficulty
+        function generateQuestion() {
+            let num1, num2;
+            let maxProduct;
+            let rangeMin, rangeMax;
+
+            switch (currentDifficulty) {
+                case 'easy':
+                    num1 = getRandomInt(1, 10);
+                    num2 = getRandomInt(1, 10);
+                    maxProduct = 100;
+                    rangeMin = 0;
+                    rangeMax = 20;
+                    break;
+                case 'medium':
+                    num1 = getRandomInt(1, 20);
+                    num2 = getRandomInt(1, 20);
+                    maxProduct = 400;
+                    rangeMin = 0;
+                    rangeMax = 50;
+                    break;
+                case 'hard':
+                    num1 = getRandomInt(1, 50);
+                    num2 = getRandomInt(1, 50);
+                    maxProduct = 2500;
+                    rangeMin = 0;
+                    rangeMax = 100;
+                    break;
+            }
+
+            const operations = ['+', '-', '*', '/'];
+            const operation = operations[getRandomInt(0, operations.length - 1)];
+            let question = '';
+            let correctAnswer;
+
+            switch (operation) {
+                case '+':
+                    question = `${num1} + ${num2} = ?`;
+                    correctAnswer = num1 + num2;
+                    break;
+                case '-':
+                    if (num1 < num2) {
+                        [num1, num2] = [num2, num1];
+                    }
+                    question = `${num1} - ${num2} = ?`;
+                    correctAnswer = num1 - num2;
+                    break;
+                case '*':
+                    question = `${num1} x ${num2} = ?`;
+                    correctAnswer = num1 * num2;
+                    break;
+                case '/':
+                    let divisor = getRandomInt(1, Math.min(num1, num2) > 0 ? Math.min(num1, num2) : 1);
+                    let dividend = divisor * getRandomInt(1, Math.floor(maxProduct / divisor));
+                    question = `${dividend} : ${divisor} = ?`;
+                    correctAnswer = dividend / divisor;
+                    if (divisor === 0 || dividend === 0) {
+                        generateQuestion();
+                        return;
+                    }
+                    break;
+            }
+
+            const answers = new Set();
+            answers.add(correctAnswer);
+
+            while (answers.size < 4) {
+                let incorrectAnswer;
+                if (currentDifficulty === 'easy') {
+                    incorrectAnswer = getRandomInt(Math.max(rangeMin, correctAnswer - 5), Math.min(rangeMax, correctAnswer + 5));
+                } else {
+                    incorrectAnswer = getRandomInt(rangeMin, rangeMax);
+                }
+                
+                if (!answers.has(incorrectAnswer)) {
+                    answers.add(incorrectAnswer);
+                }
+            }
+
+            const shuffledAnswers = shuffleArray(Array.from(answers));
+
+            currentQuestion = { question, correctAnswer, options: shuffledAnswers };
+            questionText.textContent = question;
+            feedbackText.textContent = '';
+
+            optionsContainer.innerHTML = '';
+            shuffledAnswers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.textContent = answer;
+                button.dataset.value = answer;
+                button.addEventListener('click', () => selectOption(button));
+                optionsContainer.appendChild(button);
+            });
+
+            selectedOptionButton = null; // Reset selected option
+            startTimer();
+        }
+
+        // Function to handle option selection
+        function selectOption(button) {
+            // Remove 'selected' class from previously selected button
+            if (selectedOptionButton) {
+                selectedOptionButton.classList.remove('selected');
+            }
+            // Add 'selected' class to the newly selected button
+            button.classList.add('selected');
+            selectedOptionButton = button;
+            checkAnswer(); // Automatically check answer when an option is selected
+        }
+
+        // Function to start the countdown timer for each question
+        function startTimer() {
+            clearInterval(timer);
+            // Set time limit based on difficulty
+            if (currentDifficulty === 'easy') {
+                timeLeft = 15; // 15 seconds for easy mode
+            } else {
+                timeLeft = 10; // 10 seconds for medium and hard modes
+            }
+            timeLeftDisplay.textContent = timeLeft;
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timeLeftDisplay.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    feedbackText.textContent = 'Waktu habis! Jawaban salah.';
+                    feedbackText.className = 'feedback incorrect';
+                    // Schedule incorrect sound using Tone.Transport
+                    Tone.Transport.scheduleOnce(() => {
+                        incorrectNoise.triggerAttackRelease("8n");
+                    }, Tone.Transport.now()); // Use Tone.now() for immediate playback
+                    highlightAnswers(false); // Highlight correct answer even if time runs out
+                    setTimeout(nextQuestion, 1500);
+                }
+            }, 1000);
+        }
+
+        // Function to highlight correct/incorrect answers
+        function highlightAnswers(isCorrect) {
+            if (selectedOptionButton) {
+                selectedOptionButton.classList.remove('selected'); // Remove selected visual
+                if (isCorrect) {
+                    selectedOptionButton.classList.add('correct-answer');
+                } else {
+                    selectedOptionButton.classList.add('incorrect-answer');
+                }
+            }
+
+            // Always highlight the correct answer
+            Array.from(optionsContainer.children).forEach(button => {
+                if (parseInt(button.dataset.value) === currentQuestion.correctAnswer) {
+                    button.classList.add('correct-answer');
+                }
+            });
+        }
+
+        // Function to check the user's answer
+        function checkAnswer() {
+            clearInterval(timer);
+
+            if (!selectedOptionButton) {
+                feedbackText.textContent = 'Mohon pilih jawaban.';
+                feedbackText.className = 'feedback incorrect';
+                // Schedule incorrect sound using Tone.Transport
+                Tone.Transport.scheduleOnce(() => {
+                    incorrectNoise.triggerAttackRelease("8n");
+                }, Tone.Transport.now()); // Use Tone.now() for immediate playback
+                startTimer();
+                return;
+            }
+
+            const userAnswer = parseInt(selectedOptionButton.dataset.value);
+            const isAnswerCorrect = (userAnswer === currentQuestion.correctAnswer);
+
+            if (isAnswerCorrect) {
+                score++;
+                scoreDisplay.textContent = score;
+                feedbackText.textContent = 'Benar! Hebat!';
+                feedbackText.className = 'feedback correct';
+                // Schedule correct sound using Tone.Transport
+                Tone.Transport.scheduleOnce(() => {
+                    correctSynth.triggerAttackRelease("C5", "8n");
+                }, Tone.Transport.now()); // Use Tone.now() for immediate playback
+            } else {
+                feedbackText.textContent = `Salah! Jawaban yang benar adalah ${currentQuestion.correctAnswer}.`;
+                feedbackText.className = 'feedback incorrect';
+                // Schedule incorrect sound using Tone.Transport
+                Tone.Transport.scheduleOnce(() => {
+                    incorrectNoise.triggerAttackRelease("8n");
+                }, Tone.Transport.now()); // Use Tone.now() for immediate playback
+            }
+
+            highlightAnswers(isAnswerCorrect); // Apply color feedback
+
+            // Disable all buttons after an answer is given
+            Array.from(optionsContainer.children).forEach(button => button.disabled = true);
+            setTimeout(nextQuestion, 1500);
+        }
+
+        // Function to move to the next question or end the quiz
+        function nextQuestion() {
+            questionCount++;
+            if (questionCount < totalQuestions) {
+                // Remove previous answer highlights and re-enable buttons
+                Array.from(optionsContainer.children).forEach(button => {
+                    button.classList.remove('correct-answer', 'incorrect-answer', 'selected');
+                    button.disabled = false;
+                });
+                generateQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        // Function to handle the pre-quiz countdown
+        function startPreQuizCountdown() {
+            welcomeScreen.classList.add('hidden');
+            countdownScreen.classList.remove('hidden');
+            let count = 3;
+            countdownText.textContent = count;
+            // Schedule beep for countdown using Tone.Transport
+            Tone.Transport.scheduleOnce(() => {
+                countdownBeep.triggerAttackRelease("C4", "8n");
+            }, Tone.Transport.now()); // Use Tone.now() for immediate playback
+
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownText.textContent = count;
+                    // Schedule beep for countdown using Tone.Transport
+                    Tone.Transport.scheduleOnce(() => {
+                        countdownBeep.triggerAttackRelease("C4", "8n");
+                    }, Tone.Transport.now()); // Use Tone.now() for immediate playback
+                } else if (count === 0) {
+                    countdownText.textContent = 'Mulai!';
+                    // Schedule higher pitch for "Go!" using Tone.Transport
+                    Tone.Transport.scheduleOnce(() => {
+                        countdownBeep.triggerAttackRelease("G4", "4n");
+                    }, Tone.Transport.now()); // Use Tone.now() for immediate playback
+                } else {
+                    clearInterval(countdownInterval);
+                    countdownScreen.classList.add('hidden');
+                    quizScreen.classList.remove('hidden');
+                    score = 0;
+                    questionCount = 0;
+                    scoreDisplay.textContent = score;
+                    currentDifficulty = difficultySelect.value;
+                    generateQuestion();
+                    backgroundMusic.play().catch(e => console.log("Music play failed:", e));
+                    toggleMusicButton.textContent = 'Jeda Musik';
+                }
+            }, 1000);
+        }
+
+        // Function to start the quiz (now initiates countdown)
+        function startQuiz() {
+            // Tone.js requires a user interaction to start its audio context
+            Tone.start();
+            // Start Tone.js Transport for precise scheduling
+            Tone.Transport.start(); 
+            startPreQuizCountdown(); // Call the new countdown function
+        }
+
+        // Function to end the quiz and show results
+        function endQuiz() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            finalScoreDisplay.textContent = score;
+            clearInterval(timer);
+            backgroundMusic.pause();
+            backgroundMusic.currentTime = 0;
+            toggleMusicButton.textContent = 'Putar Musik';
+            // Stop Tone.js Transport when quiz ends
+            Tone.Transport.stop(); 
+        }
+
+        // Function to toggle background music
+        function toggleMusic() {
+            if (backgroundMusic.paused) {
+                backgroundMusic.play().catch(e => console.log("Music play failed:", e));
+                toggleMusicButton.textContent = 'Jeda Musik';
+            } else {
+                backgroundMusic.pause();
+                toggleMusicButton.textContent = 'Putar Musik';
+            }
+        }
+
+        // Function to return to the welcome screen from the result screen
+        function backToWelcome() {
+            resultScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+            // Reset any quiz state if needed, though startQuiz will re-initialize
+        }
+
+        // Event Listeners
+        startQuizButton.addEventListener('click', startQuiz);
+        // Change restartQuizButton to go back to welcome screen
+        restartQuizButton.addEventListener('click', backToWelcome); 
+        toggleMusicButton.addEventListener('click', toggleMusic);
+
+        // Initial setup on window load
+        window.onload = function() {
+            // Nothing specific to do here for initial load as welcome screen is default
+        };
+    </script>
+</body>
+</html>
